@@ -4,7 +4,9 @@ import Header from './components/common/Header';
 import HomePage from './pages/HomePage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
+import RouteGuard from './components/RouteGuard';
 
 function App() {
   return (
@@ -17,6 +19,16 @@ function App() {
           <Route path="/register" element={<Register />} />
           
           
+          <Route 
+            path="/dashboard" 
+            element={
+              <RouteGuard>
+                <Dashboard />
+              </RouteGuard>
+            } 
+          />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>

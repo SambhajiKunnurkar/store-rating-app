@@ -9,7 +9,7 @@ const Register = () => {
     const { register } = useAuth();
 
     const validatePassword = (password) => {
-        
+        const regex = /^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9a-zA-Z]).{8,16}$/;
         if (!regex.test(password)) {
             setPasswordError('Password must be 8-16 chars, with an uppercase letter & a special character.');
             return false;
