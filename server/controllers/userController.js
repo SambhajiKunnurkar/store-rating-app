@@ -2,7 +2,6 @@ const User = require('../models/User');
 const Store = require('../models/Store');
 const Rating = require('../models/Rating');
 
-
 exports.createUser = async (req, res) => {
   try {
     const user = await User.create(req.body); 
@@ -23,13 +22,40 @@ exports.getUsers = async (req, res) => {
   if (role) query.role = role;
 
   try {
-    const users = await User.find(query);
-    res.status(200).json({ success: true, count: users.length, data: users });
+    const users = await User.find(query).lean();
+
+    const allStores = await Store.find({});
+    const allRatings = await Rating.find({});
+
+    const usersWithStoreData = users.map(user => {
+        if (user.role === 'Store Owner') {
+            
+            const ownedStores = allStores.filter(store => store.owner.toString() === user._id.toString());
+            
+            if (ownedStores.length > 0) {
+                
+            
+                const storeAverages = ownedStores.map(store => {
+                    const storeRatings = allRatings.filter(r => r.store.toString() === store._id.toString());
+                    if (storeRatings.length === 0) return 0;
+                    const total = storeRatings.reduce((acc, item) => acc + item.rating, 0);
+                    return total / storeRatings.length;
+                });
+
+                
+                const totalAverage = storeAverages.reduce((acc, avg) => acc + avg, 0) / ownedStores.length;
+                
+                return { ...user, storeRating: totalAverage.toFixed(1) };
+            }
+        }
+        return user;
+    });
+
+    res.status(200).json({ success: true, count: usersWithStoreData.length, data: usersWithStoreData });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
-
 
 exports.getAdminDashboard = async (req, res) => {
     try {
@@ -67,7 +93,6 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-
 exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -78,16 +103,18 @@ exports.deleteUser = async (req, res) => {
 
     
     if (user.role === 'Store Owner') {
-      const store = await Store.findOne({ owner: user._id });
-      if (store) {
         
-        await Rating.deleteMany({ store: store._id });
-        
-        await store.deleteOne();
-      }
+        const stores = await Store.find({ owner: user._id });
+        if (stores && stores.length > 0) {
+            
+            for (const store of stores) {
+                await Rating.deleteMany({ store: store._id });
+            }
+            
+            await Store.deleteMany({ owner: user._id });
+        }
     }
 
-    
     await user.deleteOne();
 
     res.status(200).json({ success: true, data: {} });

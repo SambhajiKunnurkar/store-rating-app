@@ -7,27 +7,27 @@ import { FaUsers, FaStore, FaStar, FaTrash } from 'react-icons/fa';
 const AdminDashboard = () => {
     const { user: currentUser } = useAuth(); 
 
-    // Data State
+    
     const [stats, setStats] = useState({ totalUsers: 0, totalStores: 0, totalRatings: 0 });
     const [users, setUsers] = useState([]);
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // UI Toggle State
+    
     const [showAddStoreForm, setShowAddStoreForm] = useState(false);
     const [showAddUserForm, setShowAddUserForm] = useState(false);
 
-    // Form Data State
+    
     const [newStore, setNewStore] = useState({ name: '', email: '', address: '', owner: '' });
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '', address: '', role: 'Normal User' });
     
-    // --- NEW --- Real-time validation warning state
     const [nameWarning, setNameWarning] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const [statsRes, usersRes, storesRes] = await Promise.all([
                     api.get('/users/dashboard'),
                     api.get('/users'),
@@ -49,15 +49,13 @@ const AdminDashboard = () => {
         setNewStore({ ...newStore, [e.target.name]: e.target.value });
     };
 
-    // --- UPDATED --- User form change handler with validation
     const handleUserFormChange = (e) => {
         const { name, value } = e.target;
-
         if (name === 'name') {
             if (value.length > 0 && value.length < 20) {
                 setNameWarning('Name must be at least 20 characters long.');
             } else {
-                setNameWarning(''); // Clear warning if valid or empty
+                setNameWarning('');
             }
         }
         setNewUser({ ...newUser, [name]: value });
@@ -65,7 +63,7 @@ const AdminDashboard = () => {
 
     const handleAddUser = async (e) => {
         e.preventDefault();
-        if (nameWarning) { // Prevent submission if there's a warning
+        if (nameWarning) {
             alert('Please fix the errors before submitting.');
             return;
         }
@@ -150,14 +148,14 @@ const AdminDashboard = () => {
 
     return (
         <div className="space-y-8">
-            {/* Stats Section */}
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard icon={<FaUsers size={24} className="text-white" />} label="Total Users" value={stats.totalUsers} color="bg-blue-500" />
                 <StatCard icon={<FaStore size={24} className="text-white" />} label="Total Stores" value={stats.totalStores} color="bg-green-500" />
                 <StatCard icon={<FaStar size={24} className="text-white" />} label="Total Ratings" value={stats.totalRatings} color="bg-yellow-500" />
             </div>
 
-            {/* User Management Section */}
+            
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold text-gray-700">Manage Users</h3>
@@ -185,7 +183,7 @@ const AdminDashboard = () => {
                 )}
             </div>
             
-            {/* Users List Table */}
+            
             <div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-4">All Users</h3>
                 <div className="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
@@ -195,6 +193,8 @@ const AdminDashboard = () => {
                                 <th className="p-3 text-left">Name</th>
                                 <th className="p-3 text-left">Email</th>
                                 <th className="p-3 text-left">Role</th>
+                                
+                                <th className="p-3 text-left">Store Rating</th> 
                                 <th className="p-3 text-left">Actions</th>
                             </tr>
                         </thead>
@@ -205,6 +205,12 @@ const AdminDashboard = () => {
                                     <td className="p-3">{user.email}</td>
                                     <td className="p-3">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'System Administrator' ? 'bg-red-200 text-red-800' : user.role === 'Store Owner' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}`}>{user.role}</span>
+                                    </td>
+                                   
+                                    <td className="p-3">
+                                        {user.role === 'Store Owner' && user.storeRating && (
+                                            <span className="flex items-center">{user.storeRating} <FaStar className="ml-1 text-yellow-500" /></span>
+                                        )}
                                     </td>
                                     <td className="p-3 flex items-center space-x-2">
                                         {user.role === 'Normal User' && (
@@ -230,7 +236,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Store Management Section */}
+            
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold text-gray-700">Manage Stores</h3>
@@ -263,7 +269,7 @@ const AdminDashboard = () => {
                 )}
             </div>
             
-            {/* All Stores List Table */}
+            
             <div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-4">All Stores</h3>
                 <div className="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
@@ -272,6 +278,8 @@ const AdminDashboard = () => {
                             <tr>
                                 <th className="p-3 text-left">Name</th>
                                 <th className="p-3 text-left">Email</th>
+                                
+                                <th className="p-3 text-left">Owner</th>
                                 <th className="p-3 text-left">Rating</th>
                                 <th className="p-3 text-left">Actions</th>
                             </tr>
@@ -281,6 +289,8 @@ const AdminDashboard = () => {
                                 <tr key={store._id} className="border-t">
                                     <td className="p-3">{store.name}</td>
                                     <td className="p-3">{store.email}</td>
+                                    {/* --- NEW CELL --- */}
+                                    <td className="p-3">{store.owner ? store.owner.name : 'N/A'}</td>
                                     <td className="p-3 flex items-center">{store.overallRating.toFixed(1)} <FaStar className="ml-2 text-yellow-500" /></td>
                                     <td className="p-3">
                                         <button onClick={() => handleDeleteStore(store._id)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">

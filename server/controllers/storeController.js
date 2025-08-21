@@ -12,6 +12,10 @@ exports.createStore = async (req, res) => {
 };
 
 
+
+
+
+
 exports.getStores = async (req, res) => {
     const { name, address } = req.query;
     let storeQuery = {};
@@ -20,7 +24,9 @@ exports.getStores = async (req, res) => {
 
     try {
         
-        const stores = await Store.find(storeQuery).lean();
+        const stores = await Store.find(storeQuery)
+            .populate('owner', 'name email')
+            .lean();
 
         const ratings = await Rating.find({});
         const userRatings = await Rating.find({ user: req.user.id });
@@ -73,31 +79,42 @@ exports.submitOrUpdateRating = async (req, res) => {
 };
 
 
+
+
+
 exports.getStoreOwnerDashboard = async (req, res) => {
     try {
-        const store = await Store.findOne({ owner: req.user.id });
-        if (!store) {
-            return res.status(404).json({ success: false, message: 'No store found for this owner.' });
+        
+        const stores = await Store.find({ owner: req.user.id });
+
+        if (!stores || stores.length === 0) {
+            return res.status(404).json({ success: false, message: 'No stores found for this owner.' });
         }
 
-        const ratings = await Rating.find({ store: store._id }).populate('user', 'name email');
+        
+        const dashboardData = await Promise.all(stores.map(async (store) => {
+            const ratings = await Rating.find({ store: store._id }).populate('user', 'name email');
+            const total = ratings.reduce((acc, item) => acc + item.rating, 0);
+            const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
 
-        const total = ratings.reduce((acc, item) => acc + item.rating, 0);
-        const averageRating = ratings.length > 0 ? (total / ratings.length).toFixed(1) : 0;
+            return {
+                storeName: store.name,
+                storeId: store._id,
+                averageRating: parseFloat(averageRating),
+                ratings,
+            };
+        }));
 
         res.status(200).json({
             success: true,
-            data: {
-                storeName: store.name,
-                averageRating: parseFloat(averageRating),
-                ratings,
-            }
+            data: dashboardData 
         });
 
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
+
 
 exports.deleteStore = async (req, res) => {
   try {
@@ -107,7 +124,7 @@ exports.deleteStore = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Store not found' });
     }
 
-    // Also delete all ratings associated with the store
+    
     await Rating.deleteMany({ store: req.params.id });
     
     await store.deleteOne();
