@@ -3,7 +3,8 @@ const {
   createStore,
   getStores,
   submitOrUpdateRating,
-  getStoreOwnerDashboard
+  getStoreOwnerDashboard,
+  deleteStore
 } = require('../controllers/storeController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const router = express.Router();
@@ -21,5 +22,5 @@ router
   .route('/:storeId/rate')
   .post(protect, authorize('Normal User'), submitOrUpdateRating);
 
-
+router.route('/:id').delete(protect, authorize('System Administrator'), deleteStore);
 module.exports = router;

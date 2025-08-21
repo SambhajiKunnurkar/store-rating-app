@@ -98,3 +98,22 @@ exports.getStoreOwnerDashboard = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
+
+exports.deleteStore = async (req, res) => {
+  try {
+    const store = await Store.findById(req.params.id);
+
+    if (!store) {
+      return res.status(404).json({ success: false, message: 'Store not found' });
+    }
+
+    // Also delete all ratings associated with the store
+    await Rating.deleteMany({ store: req.params.id });
+    
+    await store.deleteOne();
+
+    res.status(200).json({ success: true, data: {} });
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'Error deleting store', error: error.message });
+  }
+};
