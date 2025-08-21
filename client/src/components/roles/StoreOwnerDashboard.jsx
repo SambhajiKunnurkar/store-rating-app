@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import Loader from '../common/Loader';
 import { FaStar } from 'react-icons/fa';
+import UpdatePassword from '../common/UpdatePassword'; 
 
 const StoreOwnerDashboard = () => {
     const [dashboardData, setDashboardData] = useState([]); 
@@ -68,6 +69,7 @@ const StoreOwnerDashboard = () => {
                     {store.ratings.length === 0 && <p className="text-center mt-4 text-gray-500">No ratings submitted for this store yet.</p>}
                 </div>
             ))}
+            <UpdatePassword />
         </div>
     );
 };

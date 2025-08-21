@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import Loader from '../common/Loader';
 import { FaStar, FaSearch } from 'react-icons/fa';
-
+import UpdatePassword from '../common/UpdatePassword'; 
 
 const StarRating = ({ rating, onRate, editable = false }) => {
     return (
@@ -138,6 +138,7 @@ const NormalUserDashboard = () => {
                     </div>
                 </div>
             )}
+            <UpdatePassword />
         </div>
     );
 };

@@ -86,3 +86,37 @@ exports.updatePassword = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
+
+
+exports.updatePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        
+        const user = await User.findById(req.user.id).select('+password');
+
+        
+        if (!(await user.matchPassword(currentPassword))) {
+            return res.status(401).json({ success: false, message: 'Invalid current password' });
+        }
+
+        
+        
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9a-zA-Z]).{8,16}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({ success: false, message: 'New password must be 8-16 characters, with at least one uppercase letter and one special character.' });
+        }
+
+        
+        
+        user.password = newPassword;
+        await user.save();
+        
+       
+        
+        res.status(200).json({ success: true, message: 'Password updated successfully' });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
