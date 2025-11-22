@@ -17,8 +17,8 @@ const HomePage = () => {
                 </Link>
             </div>
 
-            <h4 className="text-4xl font-extrabold text-gray-800 mb-4">Admin Email: admin@gmail.com</h4>
-            <h4 className="text-4xl font-extrabold text-gray-800 mb-4">Admin Password: Admin@1234</h4>
+            <h4 className="px-6 font-extrabold text-gray-800 mb-4">Admin Email: admin@gmail.com</h4>
+            <h4 className="px-6 font-extrabold text-gray-800 mb-4">Admin Password: Admin@1234</h4>
 
             
         </div>
